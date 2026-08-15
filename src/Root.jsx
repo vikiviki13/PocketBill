@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import App from './App';
 import { Sync } from './sync';
-import { supabase, isSupabaseConfigured } from './supabase';
+import { supabase, isAuthEnabled } from './supabase';
 import AuthScreen from './screens/AuthScreen';
 
 const IS_SHARE_LINK = window.location.hash.startsWith('#share=');
@@ -19,7 +19,7 @@ export function Splash() {
 
 export default function Root() {
   const [session, setSession] = useState(() => (
-    isSupabaseConfigured && !IS_SHARE_LINK ? undefined : 'bypass'
+    isAuthEnabled && !IS_SHARE_LINK ? undefined : 'bypass'
   ));
   const [syncing, setSyncing] = useState(false);
 
@@ -32,7 +32,7 @@ export default function Root() {
   };
 
   useEffect(() => {
-    if (!isSupabaseConfigured || IS_SHARE_LINK) return undefined;
+    if (!isAuthEnabled || IS_SHARE_LINK) return undefined;
 
     supabase.auth.getSession().then(({ data }) => adoptSession(data.session));
 

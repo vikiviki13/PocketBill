@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from './supabase.js';
+import { supabase, isCloudSyncEnabled } from './supabase.js';
 import { KEYS, LAST_USER_KEY, PENDING_DELETES_KEY, ROW_TABLES, STATIC_TABLES } from './keys.js';
 
 const PENDING_PUSH_KEY = 'pb_pending_push';
@@ -33,7 +33,7 @@ function tableKey(table) {
 }
 
 async function currentUserId() {
-  if (!isSupabaseConfigured) return null;
+  if (!isCloudSyncEnabled) return null;
   const { data } = await supabase.auth.getUser();
   return data?.user?.id || null;
 }
@@ -64,7 +64,7 @@ export const Sync = {
   },
 
   queuePush(collection = null, force = false) {
-    if (!this.isOnline || !isSupabaseConfigured) {
+    if (!this.isOnline || !isCloudSyncEnabled) {
       if (collection) this.markDirty(collection);
       return;
     }
@@ -102,7 +102,7 @@ export const Sync = {
   },
 
   async performSync() {
-    if (!isSupabaseConfigured) return false;
+    if (!isCloudSyncEnabled) return false;
     const userId = await currentUserId();
     if (!userId) return false;
     if (!this.isOnline && !navigator.onLine) return false;
@@ -162,7 +162,7 @@ export const Sync = {
   },
 
   async pullAll() {
-    if (!isSupabaseConfigured) return false;
+    if (!isCloudSyncEnabled) return false;
     const userId = await currentUserId();
     if (!userId) return false;
 
@@ -186,7 +186,7 @@ export const Sync = {
   },
 
   async loginSync() {
-    if (!isSupabaseConfigured) return;
+    if (!isCloudSyncEnabled) return;
     const userId = await currentUserId();
     if (!userId) return;
 
@@ -209,7 +209,7 @@ export const Sync = {
   },
 
   async signOut() {
-    if (!isSupabaseConfigured) return;
+    if (!isCloudSyncEnabled) return;
     if (this._timer) window.clearTimeout(this._timer);
     write(PENDING_PUSH_KEY, []);
     write(PENDING_DELETES_KEY, []);

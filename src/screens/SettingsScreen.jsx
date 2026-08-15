@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Field, StickyFooter, Topbar } from '../components';
 import { DB } from '../db';
 import { Sync } from '../sync';
-import { isSupabaseConfigured } from '../supabase';
+import { isAuthEnabled } from '../supabase';
 import { clone } from '../utils';
 
 export default function SettingsScreen({ onBack, onSave, onReset, onSignOut }) {
@@ -29,8 +29,12 @@ export default function SettingsScreen({ onBack, onSave, onReset, onSignOut }) {
         </div>
         <div className="section-label">Data</div>
         <button className="btn btn-danger" type="button" onClick={onReset}>Erase all local data</button>
-        <p className="footnote">Pocketbill works offline and stores a copy on this device. When you are online, changes sync to your account in the cloud.</p>
-        {isSupabaseConfigured && (
+        <p className="footnote">
+          {isAuthEnabled
+            ? 'Pocketbill works offline and stores a copy on this device. When you are online, changes sync to your account in the cloud.'
+            : 'Account access is temporarily disabled. Pocketbill stores your data only on this device.'}
+        </p>
+        {isAuthEnabled && (
           <>
             <div className="section-label">Account</div>
             <div className="sync-status">
