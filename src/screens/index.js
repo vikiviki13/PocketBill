@@ -1,9 +1,11 @@
 export { default as ClientFormScreen } from './ClientFormScreen';
+export { default as ClientsScreen } from './ClientsScreen';
 export { default as CodeFormScreen } from './CodeFormScreen';
 export { default as CreateInvoiceScreen } from './CreateInvoiceScreen';
 export { default as HomeScreen } from './HomeScreen';
 export { default as InvoicePreviewScreen } from './InvoicePreviewScreen';
 export { default as ItemFormScreen } from './ItemFormScreen';
+export { default as ItemsScreen } from './ItemsScreen';
 export { default as NumberConfigScreen } from './NumberConfigScreen';
 export { default as PaymentScreen } from './PaymentScreen';
 export { default as SettingsScreen } from './SettingsScreen';

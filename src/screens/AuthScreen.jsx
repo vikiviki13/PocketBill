@@ -1,27 +1,19 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { supabase, isSupabaseConfigured } from '../supabase';
+import { friendlyAuthError } from '../authErrors';
 
 function ErrorBox({ message }) {
   return message ? <div className="auth-error" role="alert">{message}</div> : null;
 }
 
-function friendlyError(message) {
-  if (!message) return 'Something went wrong. Please try again.';
-  if (message.includes('already registered')) return 'An account with this email already exists. Sign in instead.';
-  if (message.includes('Invalid login credentials')) return 'Incorrect email or password.';
-  if (message.includes('Email not confirmed')) return 'Please confirm your email first. Check your inbox for the confirmation link.';
-  if (message.includes('rate limit')) return 'Too many attempts. Please wait a minute and try again.';
-  if (message.includes('Password should be')) return 'Password should be at least 6 characters.';
-  return message;
-}
-
-export default function AuthScreen({ onAuthed }) {
+export default function AuthScreen({ onAuthed = () => {} }) {
   const [mode, setMode] = useState('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+  const submittingRef = useRef(false);
 
   if (!isSupabaseConfigured) {
     return (
@@ -37,20 +29,28 @@ export default function AuthScreen({ onAuthed }) {
 
   const submit = async (event) => {
     event.preventDefault();
+    if (submittingRef.current) return;
+
     setError('');
     setInfo('');
 
-    if (!email.trim() || !password) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !password) {
       setError('Please enter your email and password.');
       return;
     }
 
+    submittingRef.current = true;
     setBusy(true);
     try {
       if (mode === 'signup') {
-        const { data, error: signUpError } = await supabase.auth.signUp({ email: email.trim(), password });
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password,
+          options: { emailRedirectTo: window.location.origin },
+        });
         if (signUpError) {
-          setError(friendlyError(signUpError.message));
+          setError(friendlyAuthError(signUpError, 'signup'));
         } else if (data.session) {
           onAuthed();
         } else {
@@ -58,16 +58,28 @@ export default function AuthScreen({ onAuthed }) {
           setMode('signin');
         }
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password,
+        });
         if (signInError) {
-          setError(friendlyError(signInError.message));
+          setError(friendlyAuthError(signInError, 'signin'));
         } else {
           onAuthed();
         }
       }
+    } catch (authError) {
+      setError(friendlyAuthError(authError, mode));
     } finally {
+      submittingRef.current = false;
       setBusy(false);
     }
+  };
+
+  const selectMode = (nextMode) => {
+    setMode(nextMode);
+    setError('');
+    setInfo('');
   };
 
   return (
@@ -78,16 +90,16 @@ export default function AuthScreen({ onAuthed }) {
         <p className="auth-sub">Invoices that work on your phone, backed by the cloud.</p>
 
         <div className="auth-tabs" role="tablist">
-          <button className={`auth-tab ${mode === 'signin' ? 'active' : ''}`} type="button" onClick={() => setMode('signin')}>Sign In</button>
-          <button className={`auth-tab ${mode === 'signup' ? 'active' : ''}`} type="button" onClick={() => setMode('signup')}>Create Account</button>
+          <button className={`auth-tab ${mode === 'signin' ? 'active' : ''}`} type="button" onClick={() => selectMode('signin')}>Sign In</button>
+          <button className={`auth-tab ${mode === 'signup' ? 'active' : ''}`} type="button" onClick={() => selectMode('signup')}>Create Account</button>
         </div>
 
         <form className="auth-form" onSubmit={submit}>
           <label className="section-label field-label" htmlFor="auth-email">Email</label>
-          <input id="auth-email" className="input" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(event) => setEmail(event.target.value)} />
+          <input id="auth-email" className="input" type="email" inputMode="email" autoCapitalize="none" autoComplete="email" placeholder="you@example.com" value={email} onChange={(event) => setEmail(event.target.value)} required />
 
           <label className="section-label field-label" htmlFor="auth-password">Password</label>
-          <input id="auth-password" className="input" type="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} placeholder="At least 6 characters" value={password} onChange={(event) => setPassword(event.target.value)} />
+          <input id="auth-password" className="input" type="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} minLength="6" placeholder="At least 6 characters" value={password} onChange={(event) => setPassword(event.target.value)} required />
 
           <ErrorBox message={error} />
           {info && <div className="auth-info" role="status">{info}</div>}

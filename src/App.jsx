@@ -1,15 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { BottomSheet, Toast } from './components';
+import { BottomNav, BottomSheet, Toast } from './components';
 import { DB } from './db';
 import { Sync } from './sync';
+import { isAuthEnabled } from './supabase';
 import { printInvoice } from './pdf';
 import {
   ClientFormScreen,
+  ClientsScreen,
   CodeFormScreen,
   CreateInvoiceScreen,
   HomeScreen,
   InvoicePreviewScreen,
   ItemFormScreen,
+  ItemsScreen,
   NumberConfigScreen,
   PaymentScreen,
   SettingsScreen,
@@ -129,6 +132,14 @@ export default function App() {
     window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
     setStack([{ view: 'home', params: {} }]);
     setDraft(null);
+    setSheet(null);
+  };
+
+  const goPrimary = (view) => {
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+    setStack([{ view, params: {} }]);
+    setDraft(null);
+    setItemDraft(null);
     setSheet(null);
   };
 
@@ -256,6 +267,30 @@ export default function App() {
       case 'home':
         return renderHome();
 
+      case 'clients':
+        return (
+          <ClientsScreen
+            onCreate={() => navigate('clientForm')}
+            onEdit={(clientId) => navigate('clientForm', { clientId })}
+          />
+        );
+
+      case 'items':
+        return (
+          <ItemsScreen
+            onCreate={() => {
+              setItemDraft(clone(blankItem));
+              navigate('itemForm', { source: 'catalog' });
+            }}
+            onEdit={(itemId) => {
+              const item = DB.getItem(itemId);
+              if (!item) return;
+              setItemDraft(clone(item));
+              navigate('itemForm', { source: 'catalog' });
+            }}
+          />
+        );
+
       case 'createInvoice':
         if (!draft) return renderHome({ replaceCurrent: true });
         return (
@@ -346,9 +381,9 @@ export default function App() {
               }
               const saved = DB.saveItem(item);
               refreshData();
-              addSavedItem(saved);
+              if (draft) addSavedItem(saved);
               setItemDraft(null);
-              showToast(`${saved.type === 'service' ? 'Service' : 'Item'} saved and added`);
+              showToast(draft ? `${saved.type === 'service' ? 'Service' : 'Item'} saved and added` : `${saved.type === 'service' ? 'Service' : 'Item'} saved`);
               goBack();
             }}
           />
@@ -444,7 +479,8 @@ export default function App() {
               goBack();
             }}
             onReset={() => {
-              if (!window.confirm('This will permanently erase all clients, items, and invoices on this device and in your account. Continue?')) return;
+              const resetTarget = isAuthEnabled ? 'on this device and in your account' : 'on this device';
+              if (!window.confirm(`This will permanently erase all clients, items, and invoices ${resetTarget}. Continue?`)) return;
               DB.resetAll();
               refreshData();
               showToast('All data was cleared');
@@ -659,10 +695,13 @@ export default function App() {
   };
 
   const sheetContent = getSheetContent();
+  const bottomNavViews = new Set(['home', 'clients', 'items', 'settings']);
+  const showBottomNav = bottomNavViews.has(route.view);
 
   return (
-    <div className="app">
+    <div className={`app ${showBottomNav ? 'has-bottom-nav' : ''}`}>
       {renderScreen()}
+      {showBottomNav && <BottomNav active={route.view} onNavigate={goPrimary} />}
       <BottomSheet
         open={Boolean(sheetContent)}
         title={sheetContent?.title}
