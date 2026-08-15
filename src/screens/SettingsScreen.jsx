@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Field, StickyFooter, Topbar } from '../components';
 import { DB } from '../db';
+import { Sync } from '../sync';
+import { isSupabaseConfigured } from '../supabase';
 import { clone } from '../utils';
 
-export default function SettingsScreen({ onBack, onSave, onReset }) {
+export default function SettingsScreen({ onBack, onSave, onReset, onSignOut }) {
   const [form, setForm] = useState(() => clone(DB.getBusiness()));
   const patch = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
@@ -27,7 +29,16 @@ export default function SettingsScreen({ onBack, onSave, onReset }) {
         </div>
         <div className="section-label">Data</div>
         <button className="btn btn-danger" type="button" onClick={onReset}>Erase all local data</button>
-        <p className="footnote">Pocketbill stores everything on this device only. Nothing is uploaded to a server.</p>
+        <p className="footnote">Pocketbill works offline and stores a copy on this device. When you are online, changes sync to your account in the cloud.</p>
+        {isSupabaseConfigured && (
+          <>
+            <div className="section-label">Account</div>
+            <div className="sync-status">
+              {Sync.isOnline && !Sync.hasPending() ? 'Connected — cloud sync is up to date' : 'Offline — changes will sync when you are back online'}
+            </div>
+            <button className="btn btn-outline" type="button" onClick={onSignOut}>Sign out</button>
+          </>
+        )}
       </main>
       <StickyFooter>
         <button

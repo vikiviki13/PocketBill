@@ -1,13 +1,5 @@
-const KEYS = {
-  clients: 'pb_clients',
-  items: 'pb_items',
-  hsn: 'pb_hsn',
-  sac: 'pb_sac',
-  invoices: 'pb_invoices',
-  config: 'pb_invoice_config',
-  business: 'pb_business',
-  seeded: 'pb_seeded_v1',
-};
+import { KEYS, ROW_TABLES } from './keys.js';
+import { Sync } from './sync.js';
 
 function uid(prefix = 'id') {
   return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
@@ -72,12 +64,14 @@ export const DB = {
   getBusiness: () => readObject(KEYS.business, defaultBusiness),
   saveBusiness(business) {
     write(KEYS.business, business);
+    Sync.queuePush('business');
     return business;
   },
 
   getConfig: () => readObject(KEYS.config, defaultConfig),
   saveConfig(config) {
     write(KEYS.config, config);
+    Sync.queuePush('config');
     return config;
   },
   previewNumber(config = this.getConfig()) {
@@ -110,10 +104,12 @@ export const DB = {
     if (index >= 0) clients[index] = saved;
     else clients.push(saved);
     write(KEYS.clients, clients);
+    Sync.queuePush('clients');
     return saved;
   },
   deleteClient(id) {
     write(KEYS.clients, this.getClients().filter((client) => client.id !== id));
+    Sync.queueDelete('clients', id);
   },
 
   getHSN: () => readList(KEYS.hsn),
@@ -124,6 +120,7 @@ export const DB = {
     if (index >= 0) list[index] = saved;
     else list.push(saved);
     write(KEYS.hsn, list);
+    Sync.queuePush('hsn');
     return saved;
   },
   getSAC: () => readList(KEYS.sac),
@@ -134,6 +131,7 @@ export const DB = {
     if (index >= 0) list[index] = saved;
     else list.push(saved);
     write(KEYS.sac, list);
+    Sync.queuePush('sac');
     return saved;
   },
 
@@ -148,10 +146,12 @@ export const DB = {
     if (index >= 0) items[index] = saved;
     else items.push(saved);
     write(KEYS.items, items);
+    Sync.queuePush('items');
     return saved;
   },
   deleteItem(id) {
     write(KEYS.items, this.getItems().filter((item) => item.id !== id));
+    Sync.queueDelete('items', id);
   },
 
   getInvoices: () => readList(KEYS.invoices).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)),
@@ -170,10 +170,12 @@ export const DB = {
     if (index >= 0) invoices[index] = saved;
     else invoices.push(saved);
     write(KEYS.invoices, invoices);
+    Sync.queuePush('invoices');
     return saved;
   },
   deleteInvoice(id) {
     write(KEYS.invoices, readList(KEYS.invoices).filter((invoice) => invoice.id !== id));
+    Sync.queueDelete('invoices', id);
   },
 
   seedIfNeeded() {
@@ -244,8 +246,24 @@ export const DB = {
   },
 
   resetAll() {
+    // Snapshot the remote ids before clearing local storage so the cloud
+    // copies can be removed too.
+    const collections = {
+      clients: this.getClients(),
+      items: this.getItems(),
+      hsn: this.getHSN(),
+      sac: this.getSAC(),
+      invoices: this.getInvoices(),
+    };
     Object.values(KEYS).forEach((key) => localStorage.removeItem(key));
     // Keep the first-run marker so an explicit erase stays empty after refresh.
     write(KEYS.seeded, true);
+    ROW_TABLES.forEach((table) => {
+      collections[table].forEach((row) => Sync.queueDelete(table, row.id));
+    });
+    Sync.queueDelete('business', '');
+    Sync.queueDelete('config', '');
   },
 };
+
+Sync.init();

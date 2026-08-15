@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BottomSheet, Toast } from './components';
 import { DB } from './db';
+import { Sync } from './sync';
 import { printInvoice } from './pdf';
 import {
   ClientFormScreen,
@@ -443,11 +444,14 @@ export default function App() {
               goBack();
             }}
             onReset={() => {
-              if (!window.confirm('This will permanently erase all clients, items, and invoices on this device. Continue?')) return;
+              if (!window.confirm('This will permanently erase all clients, items, and invoices on this device and in your account. Continue?')) return;
               DB.resetAll();
               refreshData();
-              showToast('All local data was cleared');
+              showToast('All data was cleared');
               goHome();
+            }}
+            onSignOut={() => {
+              Sync.signOut();
             }}
           />
         );
