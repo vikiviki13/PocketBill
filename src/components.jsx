@@ -37,6 +37,10 @@ export function Icon({ name, size = 20 }) {
     share: <><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 13.5 6.8 4" /><path d="m15.4 6.5-6.8 4" /></>,
     link: <><path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1" /><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1" /></>,
     receipt: <><path d="M4 2v20l2-2 2 2 2-2 2 2 2-2 2 2 2-2 2 2V2l-2 2-2-2-2 2-2-2-2 2-2-2-2 2Z" /><path d="M16 8h-6" /><path d="M16 12h-6" /><path d="M13 16h-3" /></>,
+    home: <><path d="m3 10 9-7 9 7" /><path d="M5 9v11h14V9" /><path d="M9 20v-6h6v6" /></>,
+    users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>,
+    package: <><path d="m16.5 9.4-9-5.19" /><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" x2="12" y1="22.08" y2="12" /></>,
+    briefcase: <><rect width="20" height="14" x="2" y="7" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /><path d="M2 12h20" /></>,
     close: <><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>,
   };
   return (
@@ -54,6 +58,32 @@ export function Topbar({ title, onBack, action }) {
       <div className="topbar-spacer" />
       {action}
     </header>
+  );
+}
+
+export function BottomNav({ active, onNavigate }) {
+  const items = [
+    { id: 'home', label: 'Invoices', icon: 'home' },
+    { id: 'clients', label: 'Clients', icon: 'users' },
+    { id: 'items', label: 'Items', icon: 'package' },
+    { id: 'settings', label: 'Settings', icon: 'settings' },
+  ];
+
+  return (
+    <nav className="bottom-nav" aria-label="Primary navigation">
+      {items.map((item) => (
+        <button
+          className={`bottom-nav-item ${active === item.id ? 'active' : ''}`}
+          type="button"
+          key={item.id}
+          onClick={() => onNavigate(item.id)}
+          aria-current={active === item.id ? 'page' : undefined}
+        >
+          <Icon name={item.icon} size={21} />
+          <span>{item.label}</span>
+        </button>
+      ))}
+    </nav>
   );
 }
 
