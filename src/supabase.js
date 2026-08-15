@@ -6,3 +6,5 @@ const anonKey = env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = url && anonKey ? createClient(url, anonKey) : null;
 export const isSupabaseConfigured = Boolean(supabase);
+export const isAuthEnabled = isSupabaseConfigured && env.VITE_AUTH_ENABLED === 'true';
+export const isCloudSyncEnabled = isAuthEnabled;
