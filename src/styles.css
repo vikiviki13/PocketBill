@@ -1152,3 +1152,36 @@ body {
   font-size: 13px;
   line-height: 1.45;
 }
+
+/* ---------- Swipe navigation ---------- */
+.app.nav-left .screen {
+  animation: pb-screen-in-left .22s ease;
+}
+
+.app.nav-right .screen {
+  animation: pb-screen-in-right .22s ease;
+}
+
+@keyframes pb-screen-in-left {
+  from {
+    transform: translateX(48px);
+    opacity: .4;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pb-screen-in-right {
+  from {
+    transform: translateX(-48px);
+    opacity: .4;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

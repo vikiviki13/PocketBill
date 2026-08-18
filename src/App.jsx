@@ -4,6 +4,7 @@ import { DB } from './db';
 import { Sync } from './sync';
 import { isAuthEnabled } from './supabase';
 import { printInvoice } from './pdf';
+import useSwipeNavigation from './useSwipeNavigation';
 import {
   ClientFormScreen,
   ClientsScreen,
@@ -47,6 +48,8 @@ const blankItem = {
   stock: 0,
   description: '',
 };
+
+const TAB_VIEWS = ['home', 'clients', 'items', 'settings'];
 
 function createInvoiceDraft() {
   const date = todayISO();
@@ -101,7 +104,11 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState('');
   const [, setDataVersion] = useState(0);
   const toastTimer = useRef(null);
+  const swipeAnimTimer = useRef(null);
+  const appRef = useRef(null);
+  const [navAnim, setNavAnim] = useState(null);
   const route = stack[stack.length - 1];
+  const bottomNavViews = new Set(TAB_VIEWS);
 
   const showToast = useCallback((message) => {
     window.clearTimeout(toastTimer.current);
@@ -109,7 +116,10 @@ export default function App() {
     toastTimer.current = window.setTimeout(() => setToastMessage(''), 2400);
   }, []);
 
-  useEffect(() => () => window.clearTimeout(toastTimer.current), []);
+  useEffect(() => () => {
+    window.clearTimeout(toastTimer.current);
+    window.clearTimeout(swipeAnimTimer.current);
+  }, []);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, [route.view, route.params]);
@@ -142,6 +152,23 @@ export default function App() {
     setItemDraft(null);
     setSheet(null);
   };
+
+  const swipeToTab = (direction) => {
+    const index = TAB_VIEWS.indexOf(route.view);
+    const nextIndex = direction === 'left' ? index + 1 : index - 1;
+    if (index < 0 || nextIndex < 0 || nextIndex >= TAB_VIEWS.length) return;
+    const nextView = TAB_VIEWS[nextIndex];
+    goPrimary(nextView);
+    setNavAnim(direction);
+    window.clearTimeout(swipeAnimTimer.current);
+    swipeAnimTimer.current = window.setTimeout(() => setNavAnim(null), 250);
+  };
+
+  useSwipeNavigation({
+    ref: appRef,
+    onSwipe: swipeToTab,
+    enabled: !sheet && bottomNavViews.has(route.view),
+  });
 
   const refreshData = () => setDataVersion((version) => version + 1);
   const closeSheet = useCallback(() => setSheet(null), []);
@@ -695,11 +722,10 @@ export default function App() {
   };
 
   const sheetContent = getSheetContent();
-  const bottomNavViews = new Set(['home', 'clients', 'items', 'settings']);
   const showBottomNav = bottomNavViews.has(route.view);
 
   return (
-    <div className={`app ${showBottomNav ? 'has-bottom-nav' : ''}`}>
+    <div className={`app ${showBottomNav ? 'has-bottom-nav' : ''}${navAnim ? ` nav-${navAnim}` : ''}`} ref={appRef}>
       {renderScreen()}
       {showBottomNav && <BottomNav active={route.view} onNavigate={goPrimary} />}
       <BottomSheet
