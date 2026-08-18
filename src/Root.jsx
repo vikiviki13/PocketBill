@@ -3,8 +3,10 @@ import App from './App';
 import { Sync } from './sync';
 import { supabase, isAuthEnabled } from './supabase';
 import AuthScreen from './screens/AuthScreen';
+import { getRecoveryCode } from './auth/recovery';
 
 const IS_SHARE_LINK = window.location.hash.startsWith('#share=');
+const IS_RECOVERY_LINK = getRecoveryCode() !== null;
 
 export function Splash() {
   return (
@@ -24,6 +26,7 @@ export default function Root() {
   const [syncing, setSyncing] = useState(false);
 
   const adoptSession = (nextSession) => {
+    if (IS_RECOVERY_LINK) return;
     setSession(nextSession);
     if (nextSession) {
       setSyncing(true);

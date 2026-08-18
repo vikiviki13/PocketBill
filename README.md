@@ -125,4 +125,4 @@ invoice-app/
 
 The app keeps a local copy of your data in the browser and syncs it to your Supabase account when online. A client share link contains a read-only encoded copy of the invoice, client, and business details so it can open on another device without a server. Anyone with that link can view the embedded invoice details.
 
-Clearing browser site data removes local clients, items, and invoices. The Business Profile screen also includes an explicit erase action, which clears the cloud copies as well when connected. After using that erase action, demo records remain cleared after refresh rather than being seeded again.
+Clearing browser site data removes local clients, items, and invoices. The Business Profile screen also includes an explicit erase action, which clears the cloud copies as well when connected. After using that erase action, records remain cleared after refresh.

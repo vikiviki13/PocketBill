@@ -12,14 +12,14 @@ function createLocalStorage() {
   };
 }
 
-test('explicit data reset remains empty instead of restoring demo records', () => {
+test('explicit data reset clears all records', () => {
   global.localStorage = createLocalStorage();
-  DB.seedIfNeeded();
+  DB.saveClient({ name: 'Test Client' });
+  DB.saveItem({ type: 'item', name: 'Test Item', price: 100 });
   assert.ok(DB.getClients().length > 0);
   assert.ok(DB.getItems().length > 0);
 
   DB.resetAll();
-  DB.seedIfNeeded();
 
   assert.deepEqual(DB.getClients(), []);
   assert.deepEqual(DB.getItems(), []);

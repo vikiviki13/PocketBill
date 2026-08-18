@@ -40,12 +40,12 @@ function readObject(key, fallback) {
 const defaultBusiness = {
   name: 'Your Business',
   email: '',
-  phone: '+91 89798 89798',
-  address: 'Ved Vihar, Chandani Chowk, Kothrud',
-  city: 'Pune',
-  pin: '411038',
-  state: 'Maharashtra',
-  country: 'India',
+  phone: '',
+  address: '',
+  city: '',
+  pin: '',
+  state: '',
+  country: '',
   logoInitial: 'PB',
 };
 
@@ -178,73 +178,6 @@ export const DB = {
     Sync.queueDelete('invoices', id);
   },
 
-  seedIfNeeded() {
-    if (read(KEYS.seeded, false)) return;
-
-    this.saveClient({
-      name: 'Passionbits',
-      email: 'gorade.kashmira@gmail.com',
-      phone: '+91 89798 89798',
-      address: 'Ved Vihar, Chandani Chowk, Kothrud',
-      city: 'Pune',
-      pin: '411038',
-      state: 'Maharashtra',
-      country: 'India',
-    });
-    this.saveClient({
-      name: 'Passionbits Studio',
-      email: '',
-      phone: '+91 89798 89798',
-      address: 'Ved Vihar, Chandani Chowk, Kothrud',
-      city: 'Pune',
-      pin: '411038',
-      state: 'Maharashtra',
-      country: 'India',
-    });
-    this.saveClient({
-      name: 'Passionbits Labs',
-      email: '',
-      phone: '+91 89798 89798',
-      address: 'Ved Vihar, Chandani Chowk, Kothrud',
-      city: 'Pune',
-      pin: '411038',
-      state: 'Maharashtra',
-      country: 'India',
-    });
-
-    this.saveHSN({ code: '8471', tax: 18, description: 'Computers, laptops and related data processing machines' });
-    this.saveHSN({ code: '8517', tax: 18, description: 'Mobile phones, telephone and communication devices' });
-    this.saveHSN({ code: '9403', tax: 18, description: 'Office furniture, including desks and chairs' });
-    this.saveSAC({ code: '998311', tax: 18, description: 'Management consulting services' });
-    this.saveSAC({ code: '998314', tax: 18, description: 'Information technology design and development services' });
-    this.saveSAC({ code: '998315', tax: 18, description: 'Hosting and information-technology infrastructure services' });
-
-    this.saveItem({
-      type: 'item',
-      name: 'Tooth Brush',
-      price: 100,
-      hsn: '8471',
-      sac: '',
-      tax: 5,
-      unit: 'Pieces',
-      stock: 0,
-      description: '',
-    });
-    this.saveItem({
-      type: 'item',
-      name: 'Tooth Paste',
-      price: 200,
-      hsn: '8471',
-      sac: '',
-      tax: 5,
-      unit: 'Pieces',
-      stock: 0,
-      description: '',
-    });
-
-    write(KEYS.seeded, true);
-  },
-
   resetAll() {
     // Snapshot the remote ids before clearing local storage so the cloud
     // copies can be removed too.
@@ -256,8 +189,6 @@ export const DB = {
       invoices: this.getInvoices(),
     };
     Object.values(KEYS).forEach((key) => localStorage.removeItem(key));
-    // Keep the first-run marker so an explicit erase stays empty after refresh.
-    write(KEYS.seeded, true);
     ROW_TABLES.forEach((table) => {
       collections[table].forEach((row) => Sync.queueDelete(table, row.id));
     });

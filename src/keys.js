@@ -6,7 +6,6 @@ export const KEYS = {
   invoices: 'pb_invoices',
   config: 'pb_invoice_config',
   business: 'pb_business',
-  seeded: 'pb_seeded_v1',
 };
 
 export const LAST_USER_KEY = 'pb_last_user_id';
